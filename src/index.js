@@ -19,7 +19,7 @@ let validTypes = ["micro", "brewpub","regional"]
 function searchEventHandler(event){
     event.preventDefault()
     const input = document.getElementById("select-state")
-    fetch(`https://api.openbrewerydb.org/breweries?by_state=${input.value}&page=1`)
+    fetch(`https://api.openbrewerydb.org/breweries?by_state=${input.value}&page=1&per_page=50`)
     .then(res => res.json())
     //.then(res => state.push(res))
     .then(breweries => {
@@ -30,10 +30,10 @@ function searchEventHandler(event){
 
 function filterEventHandler(event){
     const input = event.target.value
-    if (input === "regional") renderBreweryList(myState)
+    if (input === "all") render(myState)
     else {
     const filtering = myState.filter(brewery => brewery.brewery_type === input)
-    renderBreweryList(filtering)
+    render(filtering)
     }
 }
 
@@ -41,7 +41,7 @@ function searchByName(event){
     const input = event.target.value
     const regex = new RegExp(input,"i")
     const filtering = myState.filter(brewery => regex.test(brewery.name))
-    renderBreweryList(filtering)
+    render(filtering)
 }
 
 function render(breweries){
