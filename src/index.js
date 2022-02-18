@@ -1,30 +1,52 @@
 const breweriesList = document.getElementById("breweries-list")
+
 const selectStateForm = document.getElementById("select-state-form")
 selectStateForm.addEventListener("submit", event => searchEventHandler
 (event))
+
 const filterByTypeForm = document.getElementById("filter-by-type-form")
 filterByTypeForm.addEventListener("input", event => filterEventHandler(event))
-let state
+
+const searchBreweriesForm = document.getElementById("search-breweries-form")
+searchBreweriesForm.addEventListener("input", event => searchByName(event))
+
+const filtersSection = document.querySelector(".filters-section")
+
+
+let myState
+let validTypes = ["micro", "brewpub","regional"]
 
 function searchEventHandler(event){
     event.preventDefault()
     const input = document.getElementById("select-state")
-    fetch(`https://api.openbrewerydb.org/breweries?by_state=${input.value}`)
+    fetch(`https://api.openbrewerydb.org/breweries?by_state=${input.value}&page=1`)
     .then(res => res.json())
     //.then(res => state.push(res))
-    .then(list => {
-        state = list
-        renderBreweryList(state)
+    .then(breweries => {
+        myState = breweries.filter(brewery => validTypes.includes(brewery.brewery_type))
+        render(myState)
     })
 }
 
 function filterEventHandler(event){
     const input = event.target.value
-    if (input === "regional") renderBreweryList(state)
+    if (input === "regional") renderBreweryList(myState)
     else {
-    const filtering = state.filter(brewery => brewery.brewery_type === input)
+    const filtering = myState.filter(brewery => brewery.brewery_type === input)
     renderBreweryList(filtering)
     }
+}
+
+function searchByName(event){
+    const input = event.target.value
+    const regex = new RegExp(input,"i")
+    const filtering = myState.filter(brewery => regex.test(brewery.name))
+    renderBreweryList(filtering)
+}
+
+function render(breweries){
+    renderBreweryList(breweries)
+    renderCitiesFilter(breweries)
 }
 
 function renderBreweryList(breweries){
@@ -33,6 +55,28 @@ function renderBreweryList(breweries){
         const li = generateBreweryLi(brewery)
         breweriesList.appendChild(li)
     })
+}
+
+function renderCitiesFilter(breweries){
+    document.getElementById("filter-by-city-form")?.remove()
+    const form = document.createElement("form")
+    form.setAttribute("id","filter-by-city-form")
+    form.addEventListener("input", function(event) {
+        console.log(event.target.value)
+        const filtering = breweries.filter(brewery => brewery.city.toLowerCase() === event.target.value)
+        renderBreweryList(filtering)
+    })
+    cities = breweries.reduce((set,brewery) => {
+    set.add(brewery.city)
+    return set
+    }, new Set())
+    cities.forEach(city => {
+        form.append(
+            generateCheckbox(city),
+            generateLabel(city)
+            )
+    })
+    filtersSection.append(form)
 }
 
 function generateBreweryLi(brewery){
@@ -95,6 +139,22 @@ function generateLinkSection(url){
     const a = document.createElement("a")
     a.setAttribute('href', url)
     a.setAttribute('target', "_blank")
+    a.innerText = "VISIT WEBSITE"
     section.append(a)
     return section
+}
+
+function generateCheckbox(city){
+    const cityToLowerCase = city.toLowerCase()
+    const input = document.createElement("input")
+    input.setAttribute("type", "checkbox")
+    input.setAttribute("name", cityToLowerCase)
+    input.setAttribute("value", cityToLowerCase)
+    return input
+}
+function generateLabel(city){
+    const label = document.createElement("label")
+    label.setAttribute("for", city.toLowerCase())
+    label.innerText = city
+    return label
 }
