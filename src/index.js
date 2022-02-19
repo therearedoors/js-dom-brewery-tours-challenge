@@ -62,11 +62,12 @@ function renderCitiesFilter(breweries){
     const form = document.createElement("form")
     form.setAttribute("id","filter-by-city-form")
     form.addEventListener("input", function(event) {
-        console.log(event.target.value)
-        const filtering = breweries.filter(brewery => brewery.city.toLowerCase() === event.target.value)
-        renderBreweryList(filtering)
+        const checks = Array.from(form.childNodes).filter(node => node.checked).map(node => node.value)
+        const filtering = breweries.filter(brewery => checks.includes(brewery.city.toLowerCase()))
+        if (checks.length == 0) renderBreweryList(breweries)
+        else renderBreweryList(filtering)
     })
-    cities = breweries.reduce((set,brewery) => {
+    const cities = breweries.reduce((set,brewery) => {
     set.add(brewery.city)
     return set
     }, new Set())
