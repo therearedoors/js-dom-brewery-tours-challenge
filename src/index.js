@@ -12,16 +12,24 @@ searchBreweriesForm.addEventListener("input", event => searchByName(event))
 
 const filtersSection = document.querySelector(".filters-section")
 
+const clearAllBtn = document.querySelector(".clear-all-btn")
+clearAllBtn.addEventListener("click", clearAll)
+
+function clearAll(){
+    document.getElementById("filter-by-city-form")?.reset()
+    render(myState)
+}
 
 let myState
+let currentFiltering
 let validTypes = ["micro", "brewpub","regional"]
 
 function searchEventHandler(event){
     event.preventDefault()
+    filterByTypeForm.reset()
     const input = document.getElementById("select-state")
     fetch(`https://api.openbrewerydb.org/breweries?by_state=${input.value}&page=1&per_page=50`)
     .then(res => res.json())
-    //.then(res => state.push(res))
     .then(breweries => {
         myState = breweries.filter(brewery => validTypes.includes(brewery.brewery_type))
         render(myState)
@@ -32,8 +40,8 @@ function filterEventHandler(event){
     const input = event.target.value
     if (input === "all") render(myState)
     else {
-    const filtering = myState.filter(brewery => brewery.brewery_type === input)
-    render(filtering)
+    currentFiltering = myState.filter(brewery => brewery.brewery_type === input)
+    render(currentFiltering)
     }
 }
 
