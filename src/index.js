@@ -12,7 +12,6 @@ searchBreweriesForm.addEventListener("input", event => searchByName(event))
 
 const filtersSection = document.querySelector(".filters-section")
 
-
 let myState
 let filteredState
 let pageSortedState
@@ -29,10 +28,10 @@ function clearAll(){
 
 function searchEventHandler(event){
     event.preventDefault()
+    filterByTypeForm.reset()
     const input = document.getElementById("select-state")
     fetch(`https://api.openbrewerydb.org/breweries?by_state=${input.value}&page=1&per_page=50`)
     .then(res => res.json())
-    //.then(res => state.push(res))
     .then(breweries => {
         myState = breweries.filter(brewery => validTypes.includes(brewery.brewery_type))
         filteredState = myState
@@ -83,6 +82,7 @@ function renderBreweryList(){
 
 function subRender(filtering){
     pageSortState(filtering)
+    currentPage = 1
     renderBreweryList()
     renderPaginationButtons()
 }
