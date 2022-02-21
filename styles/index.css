@@ -228,3 +228,11 @@ article {
   text-decoration: none;
   font-weight: bold;
 }
+
+.pagination-btn {
+  background-color: #fbc02d;
+}
+
+span.pagination {
+  margin: 0rem .5rem;
+}

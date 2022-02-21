@@ -14,7 +14,18 @@ const filtersSection = document.querySelector(".filters-section")
 
 
 let myState
+let filteredState
+let pageSortedState
+let currentPage = 1
 let validTypes = ["micro", "brewpub","regional"]
+
+const clearAllBtn = document.querySelector(".clear-all-btn")
+clearAllBtn.addEventListener("click", clearAll)
+
+function clearAll(){
+    document.getElementById("filter-by-city-form")?.reset()
+    render(myState)
+}
 
 function searchEventHandler(event){
     event.preventDefault()
@@ -24,6 +35,7 @@ function searchEventHandler(event){
     //.then(res => state.push(res))
     .then(breweries => {
         myState = breweries.filter(brewery => validTypes.includes(brewery.brewery_type))
+        filteredState = myState
         render(myState)
     })
 }
@@ -32,9 +44,18 @@ function filterEventHandler(event){
     const input = event.target.value
     if (input === "all") render(myState)
     else {
-    const filtering = myState.filter(brewery => brewery.brewery_type === input)
-    render(filtering)
+    filteredState = myState.filter(brewery => brewery.brewery_type === input)
+    render(filteredState)
     }
+}
+
+function pageSortState(state){
+    pageSortedState = state.reduce((pageSort,brewery)=>{
+        const nextPage = pageSort[pageSort.length-1]
+        nextPage.push(brewery)
+        if (nextPage.length == 10) pageSort.push([])
+        return pageSort
+    },[[]])
 }
 
 function searchByName(event){
@@ -45,28 +66,38 @@ function searchByName(event){
 }
 
 function render(breweries){
-    renderBreweryList(breweries)
-    renderCitiesFilter(breweries)
+    pageSortState(breweries)
+    currentPage = 1
+    renderBreweryList()
+    renderCitiesFilter()
+    renderPaginationButtons()
 }
 
-function renderBreweryList(breweries){
+function renderBreweryList(){
     breweriesList.innerHTML = ""
-    breweries.forEach(brewery => {
+    pageSortedState[currentPage-1].forEach(brewery => {
         const li = generateBreweryLi(brewery)
         breweriesList.appendChild(li)
     })
 }
 
-function renderCitiesFilter(breweries){
+function subRender(filtering){
+    pageSortState(filtering)
+    renderBreweryList()
+    renderPaginationButtons()
+}
+
+function renderCitiesFilter(){
     document.getElementById("filter-by-city-form")?.remove()
     const form = document.createElement("form")
     form.setAttribute("id","filter-by-city-form")
-    form.addEventListener("input", function(event) {
-        console.log(event.target.value)
-        const filtering = breweries.filter(brewery => brewery.city.toLowerCase() === event.target.value)
-        renderBreweryList(filtering)
+    form.addEventListener("input", function() {
+        const checks = Array.from(form.childNodes).filter(node => node.checked).map(node => node.value)
+        const filtering = filteredState.filter(brewery => checks.includes(brewery.city.toLowerCase()))
+        if (checks.length == 0) subRender(filteredState)
+        else subRender(filtering)
     })
-    cities = breweries.reduce((set,brewery) => {
+    cities = filteredState.reduce((set,brewery) => {
     set.add(brewery.city)
     return set
     }, new Set())
@@ -77,6 +108,42 @@ function renderCitiesFilter(breweries){
             )
     })
     filtersSection.append(form)
+}
+
+function renderPaginationButtons() {
+    const subtractButton = document.createElement("button");
+    const pageNumber = document.createElement("span");
+    const addButton = document.createElement("button");
+    
+    const maxPages = pageSortedState.length
+
+    subtractButton.innerText = "-"
+    subtractButton.className = ("pagination-btn")
+    pageNumber.innerText = `Page ${currentPage} of ${maxPages}`
+    addButton.innerText = "+"
+    addButton.className = ("pagination-btn")
+    pageNumber.className = "pagination"
+
+    subtractButton.addEventListener("click", () => previousPage(maxPages))
+    addButton.addEventListener("click", () => nextPage(maxPages))
+
+    breweriesList.prepend(subtractButton,pageNumber,addButton)
+}
+
+function previousPage(max) {
+    if (currentPage > 1){
+    currentPage--
+    renderBreweryList()
+    renderPaginationButtons()
+    }
+}
+
+function nextPage(max) {
+    if (currentPage < max){
+    currentPage++
+    renderBreweryList()
+    renderPaginationButtons()
+    }
 }
 
 function generateBreweryLi(brewery){
